@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VoxelDream</title>
+    <style>
+      /* All styling lives here — no CSS framework, no webfonts (system stack
+         only; shipping a font file would violate the zero-binary rule). */
+      :root {
+        --bg: #07080c;
+        --ink: #cfd6e4;
+        --ink-dim: #6b7385;
+        --accent: #ffb36b;
+        --panel: rgba(13, 16, 24, 0.92);
+        --edge: #262c3a;
+        font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { height: 100%; background: var(--bg); color: var(--ink); overflow: hidden; }
+      #canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; cursor: crosshair; }
+
+      #message {
+        position: fixed; top: 8vh; left: 50%; transform: translateX(-50%);
+        font-size: 15px; letter-spacing: 0.06em; color: var(--ink);
+        text-shadow: 0 1px 8px #000; text-align: center; line-height: 1.7;
+        opacity: 0; transition: opacity 1.2s ease; pointer-events: none; max-width: 40em;
+      }
+      #message.visible { opacity: 1; }
+      #message em { color: var(--accent); font-style: normal; }
+
+      #toolbar {
+        position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+        display: none; gap: 8px; padding: 8px; background: var(--panel);
+        border: 1px solid var(--edge); border-radius: 10px;
+      }
+      #toolbar.visible { display: flex; }
+      .tool {
+        display: flex; align-items: center; gap: 7px; padding: 8px 14px;
+        background: transparent; border: 1px solid transparent; border-radius: 7px;
+        color: var(--ink-dim); font: inherit; font-size: 13px; cursor: pointer;
+      }
+      .tool:hover { color: var(--ink); }
+      .tool.active { color: var(--accent); border-color: var(--edge); background: rgba(255, 179, 107, 0.07); }
+      .tool svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+      .tool.primary { color: var(--bg); background: var(--accent); font-weight: 600; }
+      .tool.primary:hover { color: var(--bg); filter: brightness(1.1); }
+
+      #corner {
+        position: fixed; top: 14px; right: 14px; display: flex; gap: 14px; align-items: center;
+        font-size: 11px; color: var(--ink-dim);
+      }
+      #corner label { display: flex; gap: 5px; align-items: center; cursor: pointer; }
+      #corner button {
+        background: none; border: 1px solid var(--edge); border-radius: 6px; color: var(--ink-dim);
+        font: inherit; padding: 5px 10px; cursor: pointer;
+      }
+      #corner button:hover { color: var(--ink); }
+      #stats { min-width: 9em; text-align: right; }
+
+      #codepanel {
+        position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 90vw);
+        background: var(--panel); border-left: 1px solid var(--edge);
+        transform: translateX(100%); transition: transform 0.25s ease;
+        display: flex; flex-direction: column;
+      }
+      #codepanel.visible { transform: translateX(0); }
+      #codepanel header {
+        padding: 14px 18px; border-bottom: 1px solid var(--edge);
+        display: flex; justify-content: space-between; align-items: center;
+      }
+      #codepanel header h2 { font-size: 13px; font-weight: 600; color: var(--accent); }
+      #codepanel header button { background: none; border: none; color: var(--ink-dim); font: inherit; font-size: 16px; cursor: pointer; }
+      #codetabs { display: flex; gap: 2px; padding: 8px 12px 0; }
+      #codetabs button {
+        background: none; border: none; border-bottom: 2px solid transparent;
+        color: var(--ink-dim); font: inherit; font-size: 12px; padding: 6px 10px; cursor: pointer;
+      }
+      #codetabs button.active { color: var(--ink); border-bottom-color: var(--accent); }
+      #codebody { flex: 1; overflow-y: auto; padding: 16px 18px; font-size: 12px; line-height: 1.65; }
+      #codebody .doc { color: var(--ink); margin-bottom: 18px; }
+      #codebody .doc h1 { font-size: 14px; color: var(--accent); margin-bottom: 10px; }
+      #codebody .doc h2 { font-size: 12px; color: var(--ink); margin: 14px 0 6px; text-transform: uppercase; letter-spacing: 0.1em; }
+      #codebody .doc p { margin: 8px 0; color: var(--ink-dim); }
+      #codebody .doc li { margin: 4px 0 4px 18px; color: var(--ink-dim); }
+      #codebody .doc code { color: #9ecbff; }
+      #codebody pre { color: #8a93a8; white-space: pre; overflow-x: auto; border-top: 1px solid var(--edge); padding-top: 14px; }
+
+      #fatal {
+        position: fixed; inset: 0; display: none; place-items: center; background: var(--bg);
+        text-align: center; line-height: 2; padding: 24px;
+      }
+      #fatal.visible { display: grid; }
+      #fatal a { color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <div id="message"></div>
+    <div id="toolbar"></div>
+    <div id="corner"></div>
+    <aside id="codepanel"></aside>
+    <div id="fatal"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
