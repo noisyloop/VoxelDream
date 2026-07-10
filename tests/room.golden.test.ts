@@ -71,7 +71,7 @@ describe("dream 01 room generator", () => {
 describe("default palette", () => {
   it("is deterministic (golden hash)", () => {
     expect(fnv1a(new Uint8Array(paletteToFloat32Array(generateDefaultPalette()).buffer))).toBe(
-      "bedab3b4"
+      "aeae48ad"
     );
   });
 });

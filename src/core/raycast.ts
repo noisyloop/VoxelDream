@@ -6,7 +6,10 @@
 // nearest axis boundary next. The CPU copy exists for picking (click →
 // voxel under cursor) and as ground truth for tests.
 
-import type { World } from "./world";
+/** Anything voxel-shaped: the World, or a dense snapshot of it. */
+export interface VoxelSource {
+  get(x: number, y: number, z: number): number;
+}
 
 export interface RayHit {
   /** The solid voxel that was hit. */
@@ -23,7 +26,7 @@ export interface RayHit {
 }
 
 export function raycast(
-  world: World,
+  world: VoxelSource,
   ox: number,
   oy: number,
   oz: number,

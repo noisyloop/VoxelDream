@@ -154,6 +154,15 @@ async function boot(): Promise<void> {
   });
 
   // --- Frame loop --------------------------------------------------------------
+  // Debug handle for headless capture and poking at the live scene.
+  (window as unknown as Record<string, unknown>).__voxeldream = {
+    world,
+    renderer,
+    camera,
+    store,
+    export: () => exportShader(world, palette),
+  };
+
   let fps = 60;
   let lastT = performance.now();
   function loop(): void {

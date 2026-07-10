@@ -64,13 +64,17 @@ export function generateDefaultPalette(): PaletteEntry[] {
   const p: PaletteEntry[] = new Array(256);
   for (let i = 0; i < 256; i++) p[i] = { r: 0, g: 0, b: 0, emissive: 0 };
 
-  p[MAT.WALL] = entry(0x4a5160);
-  p[MAT.FLOOR_A] = entry(0x565049);
-  p[MAT.FLOOR_B] = entry(0x47423c);
-  p[MAT.CEILING] = entry(0x3d4350);
-  p[MAT.PILLAR] = entry(0x6b5f58);
-  p[MAT.TRIM] = entry(0x707a8f);
-  p[MAT.RUBBLE] = entry(0x59524b);
+  // Mid-to-light albedos on purpose: the room reads dark because it is
+  // UNLIT, not because it is painted black. Dark paint would eat the
+  // bounce light and make the Dream 01 GI bloom invisible (the golden
+  // test pins this: GI must add >25% energy to the lit room).
+  p[MAT.WALL] = entry(0xbcc6d6);
+  p[MAT.FLOOR_A] = entry(0xd0c4b0);
+  p[MAT.FLOOR_B] = entry(0xb2a68f);
+  p[MAT.CEILING] = entry(0xb4bdcd);
+  p[MAT.PILLAR] = entry(0xd6bfa8);
+  p[MAT.TRIM] = entry(0xdde4f0);
+  p[MAT.RUBBLE] = entry(0xc0b4a4);
 
   // Lights. Warm amber is the Dream 01 tool; the rest unlock with the sandbox.
   const lightHexes = [0xffb36b, 0xff6b5e, 0x7ee787, 0x6bc5ff, 0xc79bff, 0xfff3c4];
@@ -89,7 +93,7 @@ export function generateDefaultPalette(): PaletteEntry[] {
 }
 
 /** Pack the palette for the GPU: 256 × vec4f = (r, g, b, emissive). */
-export function paletteToFloat32Array(palette: PaletteEntry[]): Float32Array {
+export function paletteToFloat32Array(palette: PaletteEntry[]): Float32Array<ArrayBuffer> {
   const out = new Float32Array(256 * 4);
   for (let i = 0; i < 256; i++) {
     const e = palette[i] ?? { r: 0, g: 0, b: 0, emissive: 0 };

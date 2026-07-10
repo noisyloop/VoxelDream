@@ -83,7 +83,7 @@ describe("shader export (Shadertoy target)", () => {
   });
 
   it("is deterministic (golden hash of the emitted source)", () => {
-    expect(fnv1aString(glsl)).toBe("4216fe9c");
+    expect(fnv1aString(glsl)).toBe("74e58f63");
   });
 
   it("handles the pristine room (zero edits, zero lights)", () => {

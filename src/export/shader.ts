@@ -134,7 +134,7 @@ export function exportShader(
 #define EDIT_COUNT ${edits.length}
 #define LIGHT_COUNT ${shadowLights.length}
 #define AA 2
-const float LIGHT_SCALE = 3.0;
+const float LIGHT_SCALE = 50.0;
 const uint SEED = ${seed >>> 0}u;
 
 // --- PCG hash (Jarzynski & Olano, JCGT 2020) — twin of src/core/hash.ts ---

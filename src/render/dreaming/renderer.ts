@@ -219,7 +219,7 @@ export class DreamingRenderer {
     this.accumBuf?.destroy();
     this.accumBuf = this.device.createBuffer({
       size: w * h * 16,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
     });
     this.traceBindGroup = this.device.createBindGroup({
       layout: this.tracePipeline.getBindGroupLayout(0),
@@ -287,8 +287,11 @@ export class DreamingRenderer {
     f[16] = rw;
     f[17] = rh;
     f[18] = Math.tan(camera.fov / 2);
-    u[19] = moving ? 1 : 2; // maxBounces: one indirect bounce in motion, two still
-    f[20] = 3.0; // lightScale
+    u[19] = moving ? 1 : 3; // maxBounces: one indirect bounce in motion, three still
+    // Radiant power multiplier for NEE. A single emissive voxel is a tiny
+    // 1/d^2 source in a 64-voxel-wide room; ~50 lands "one lantern lights
+    // a chamber" (tonemap keeps the highlight in range).
+    f[20] = 50.0; // lightScale
     f[21] = this.width;
     f[22] = this.height;
     this.device.queue.writeBuffer(this.uniformBuf, 0, f);
@@ -312,6 +315,45 @@ export class DreamingRenderer {
 
     this.frameIndex++;
     this.samples = Math.min(this.samples + 1, 4095);
+    this.lastRW = rw;
+    this.lastRH = rh;
     return { samples: this.samples, moving };
+  }
+
+  private lastRW = 0;
+  private lastRH = 0;
+
+  /**
+   * Read the accumulation buffer back to the CPU and apply the same
+   * tonemap as blit.wgsl. Exists for headless golden-image capture and
+   * debugging — the render loop never calls it.
+   */
+  async capture(): Promise<{ width: number; height: number; pixels: Uint8ClampedArray }> {
+    const w = this.lastRW;
+    const h = this.lastRH;
+    if (!this.accumBuf || w === 0) throw new Error("nothing rendered yet");
+    const staging = this.device.createBuffer({
+      size: w * h * 16,
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+    });
+    const enc = this.device.createCommandEncoder();
+    enc.copyBufferToBuffer(this.accumBuf, 0, staging, 0, w * h * 16);
+    this.device.queue.submit([enc.finish()]);
+    await staging.mapAsync(GPUMapMode.READ);
+    const hdr = new Float32Array(staging.getMappedRange().slice(0));
+    staging.unmap();
+    staging.destroy();
+
+    const aces = (x: number) =>
+      Math.min(1, Math.max(0, (x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14)));
+    const srgb = (x: number) => (x <= 0.0031308 ? x * 12.92 : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
+    const pixels = new Uint8ClampedArray(w * h * 4);
+    for (let i = 0; i < w * h; i++) {
+      for (let c = 0; c < 3; c++) {
+        pixels[i * 4 + c] = srgb(aces(hdr[i * 4 + c]! * 1.35)) * 255;
+      }
+      pixels[i * 4 + 3] = 255;
+    }
+    return { width: w, height: h, pixels };
   }
 }
